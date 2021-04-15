@@ -1,6 +1,6 @@
 # BetterVehicleFirstPerson
 
-Features:
+## Features:
 
 - Move vehicle's first person camera and change FOV for a better view.  
 - Save per-vehicle presets (automatically applied when you enter the car)  
@@ -8,18 +8,18 @@ Features:
 - Assign hotkey (CET Overlay->Bindings->Inputs->Peek Through Window) to peek through window and see behind you (middle mouse button is recommended).  
 
 
-Installation:
+## Installation:
 
 1. Make sure you've installed Cyber Engine Tweaks.
 2. Drop the content of an archive into your cyberpunk directory (where the "bin" folder is).
 
-Changelog:
+## Changelog:
 
 ### 1.2.5 - 12/04/2021
 - Bug fixes
 
 ### 1.2.4 - 09/04/2021
-- Fix: ﻿Peek Through Window is now only works when you are driving the vehicle.
+- Fix: Peek Through Window is now only works when you are driving the vehicle.
 
 ### 1.2.3 - 08/04/2021
 - Fix: Camera is no longer applied when player is a passenger
