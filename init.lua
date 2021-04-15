@@ -311,6 +311,12 @@ function BetterVehicleFirstPerson:New()
         end
 
         if keydown then
+			local peekplayer = Game.GetPlayer()
+			local peekvehicle = Game['GetMountedVehicle;GameObject'](peekplayer)
+			if peekvehicle then
+			peekplayer:QueueEvent(NewObject('handle:vehicleCameraResetEvent'))
+			end
+		
             StartPeek()
         else
             StopPeek()
