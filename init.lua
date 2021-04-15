@@ -1,4 +1,4 @@
-local BetterVehicleFirstPerson = { version = "1.2.5" }
+local BetterVehicleFirstPerson = { version = "1.2.6" }
 local Config = require("Modules/Config")
 local Cron = require("Modules/Cron")
 
@@ -58,6 +58,12 @@ function ResetCamera()
 end
 
 function StartPeek()
+    local player = Game.GetPlayer()
+    local vehicle = Game['GetMountedVehicle;GameObject'](player)
+    if vehicle then
+        player:QueueEvent(NewObject('handle:vehicleCameraResetEvent'))
+    end
+
     Game.GetPlayer():GetFPPCameraComponent():SetLocalOrientation(Quaternion.new(0.0, 0.0, 100, 1.0))
     Game.GetPlayer():GetFPPCameraComponent():SetLocalPosition(Vector4.new(-0.6, 0.0, 0.01, 1.0))
 end
@@ -311,12 +317,6 @@ function BetterVehicleFirstPerson:New()
         end
 
         if keydown then
-			local peekplayer = Game.GetPlayer()
-			local peekvehicle = Game['GetMountedVehicle;GameObject'](peekplayer)
-			if peekvehicle then
-			peekplayer:QueueEvent(NewObject('handle:vehicleCameraResetEvent'))
-			end
-		
             StartPeek()
         else
             StopPeek()
