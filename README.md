@@ -16,7 +16,7 @@
 ## Changelog:
 
 ### 1.2.6 - 15/04/2021
-- Fix: Center camera when peeking though window
+- Fix: Center camera when peeking through window
 
 ### 1.2.5 - 12/04/2021
 - Bug fixes
