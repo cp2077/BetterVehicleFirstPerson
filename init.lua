@@ -81,14 +81,6 @@ function SaveConfig()
     Config.SaveConfig()
 end
 
-
-function OnVehicleExited()
-    -- nothing?
-    if not enabled then
-        return
-    end
-end
-
 function HasMountedVehicle()
     return not not Game['GetMountedVehicle;GameObject'](Game.GetPlayer())
 end
@@ -200,6 +192,13 @@ function OnVehicleExiting()
     ResetTilt()
     ResetFOV()
     curVehicle = nil
+end
+
+function OnVehicleExited()
+    if enabled then
+        ResetCamera()
+        ResetTilt()
+    end
 end
 
 function RefreshCameraIfNeeded()
