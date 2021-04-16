@@ -1,6 +1,7 @@
 local BetterVehicleFirstPerson = { version = "1.2.5" }
 local Config = require("Modules/Config")
 local Cron = require("Modules/Cron")
+local GameSettings = require("Modules/GameSettings")
 
 --[[
 TODO:
@@ -69,6 +70,10 @@ function StopPeek()
         Game.GetPlayer():GetFPPCameraComponent():SetLocalOrientation(Quaternion.new(0.0, 0.0, 0, 1.0))
         Game.GetPlayer():GetFPPCameraComponent():SetLocalPosition(Vector4.new(0.0, 0.0, 0.0, 1.0))
     end
+end
+function FlipY()
+	GameSettings.Toggle('/controls/fppcameramouse/FPP_MouseInvertY')
+	GameSettings.Toggle('/controls/fppcamerapad/FPP_PadInvertY')
 end
 
 function SaveConfig()
@@ -311,14 +316,29 @@ function BetterVehicleFirstPerson:New()
         end
 
         if keydown then
+	
 			local peekplayer = Game.GetPlayer()
 			local peekvehicle = Game['GetMountedVehicle;GameObject'](peekplayer)
 			if peekvehicle then
-			peekplayer:QueueEvent(NewObject('handle:vehicleCameraResetEvent'))
+				if not Game.GetPlayer():FindVehicleCameraManager():IsTPPActive() then
+					peekplayer:QueueEvent(NewObject('handle:vehicleCameraResetEvent'))
+				end
 			end
+		
+			FlipY()
 		
             StartPeek()
         else
+			local peekplayer = Game.GetPlayer()
+			local peekvehicle = Game['GetMountedVehicle;GameObject'](peekplayer)
+			if peekvehicle then
+				if not Game.GetPlayer():FindVehicleCameraManager():IsTPPActive() then
+					peekplayer:QueueEvent(NewObject('handle:vehicleCameraResetEvent'))
+				end
+			end
+			
+			FlipY()
+			
             StopPeek()
         end
     end)
