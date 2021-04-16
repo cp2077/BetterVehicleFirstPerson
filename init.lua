@@ -16,6 +16,8 @@ local enabled = true
 local isInVehicle = false
 local curVehicle = nil
 
+local isYFlipped = false
+
 function IsEnteringVehicle()
     return IsInVehicle() and Game.GetWorkspotSystem():GetExtendedInfo(Game.GetPlayer()).entering
 end
@@ -72,8 +74,21 @@ function StopPeek()
     end
 end
 function FlipY()
+	if not isYFlipped then 
+		isYFlipped = true
+	else
+		isYFlipped = false
+	end
+	
 	GameSettings.Toggle('/controls/fppcameramouse/FPP_MouseInvertY')
 	GameSettings.Toggle('/controls/fppcamerapad/FPP_PadInvertY')
+end
+function DoubleCheckY()
+	if isYFlipped then
+		GameSettings.Toggle('/controls/fppcameramouse/FPP_MouseInvertY')
+		GameSettings.Toggle('/controls/fppcamerapad/FPP_PadInvertY')
+		isYFlipped = false
+	end
 end
 
 function SaveConfig()
@@ -86,6 +101,8 @@ function OnVehicleExited()
     if not enabled then
         return
     end
+	
+	DoubleCheckY()
 end
 
 function HasMountedVehicle()
@@ -312,6 +329,7 @@ function BetterVehicleFirstPerson:New()
 
     registerInput("peek", "Peek Through Window", function(keydown)
         if not IsInVehicle() then
+			DoubleCheckY()
             return
         end
 
@@ -338,6 +356,7 @@ function BetterVehicleFirstPerson:New()
 			end
 			
 			FlipY()
+			DoubleCheckY()
 			
             StopPeek()
         end
