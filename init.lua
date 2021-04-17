@@ -373,6 +373,15 @@ function BetterVehicleFirstPerson:New()
         end
 
         if enabled and isInVehicle then
+            local curVehiclePreset = GetVehiclePreset(GetMountedVehicleRecord())
+            if not curVehiclePreset or not IsSamePreset(curVehiclePreset) then
+                ImGui.PushStyleColor(ImGuiCol.Text, 0.60, 0.40, 0.20, 1.0)
+                ImGui.Text("PRESET IS NOT SAVED")
+                ImGui.PopStyleColor(1)
+            else
+                ImGui.Text("")
+            end
+
             -- Tilt controll
             Config.data.tiltMult, tiltMultUsed = ImGui.DragFloat(" Tilt Multiplier ", Config.data.tiltMult, 0.01, -1, 5)
             if tiltMultUsed then
