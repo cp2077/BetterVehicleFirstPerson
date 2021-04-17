@@ -331,6 +331,7 @@ function BetterVehicleFirstPerson:New()
 
     registerInput("peek", "Peek Through Window", function(keydown)
         if not IsInVehicle() then
+            DoubleCheckY()
             return
         end
 
