@@ -448,6 +448,15 @@ function BetterVehicleFirstPerson:New()
                 if ImGui.Button((" Save %q preset "):format(carName)) then
                     AddVehiclePreset()
                 end
+
+                -- Reset preset
+                if curVehiclePreset and not IsSamePreset(curVehiclePreset) then
+                    ImGui.SameLine()
+                    if ImGui.Button((" Reset "):format(carName)) then
+                        ApplyPreset(curVehiclePreset)
+                        RefreshCameraIfNeeded()
+                    end
+                end
                 ImGui.Text(" ")
 
                 ImGui.BeginChild("percarpresets", 500, 300)
