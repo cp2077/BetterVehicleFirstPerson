@@ -374,25 +374,25 @@ function BetterVehicleFirstPerson:New()
 
         if enabled and isInVehicle then
             -- Tilt controll
-            Config.data.tiltMult, tiltMultUsed = ImGui.DragFloat(" Tilt Multiplier ", Config.data.tiltMult, 0.01, 0, 5)
+            Config.data.tiltMult, tiltMultUsed = ImGui.DragFloat(" Tilt Multiplier ", Config.data.tiltMult, 0.01, -1, 5)
             if tiltMultUsed then
                 RefreshCameraIfNeeded()
             end
 
             -- Raise controll
-            Config.data.yMult, raiseMultUsed = ImGui.DragFloat(" Y Multiplier ", Config.data.yMult, 0.01, -1, 2)
+            Config.data.yMult, raiseMultUsed = ImGui.DragFloat(" Y Multiplier ", Config.data.yMult, 0.01, -2, 3)
             if raiseMultUsed then
                 RefreshCameraIfNeeded()
             end
 
             -- Backoff controll
-            Config.data.zMult, backoffMultUsed = ImGui.DragFloat(" Z Multiplier ", Config.data.zMult, 0.01, -55, 7)
+            Config.data.zMult, backoffMultUsed = ImGui.DragFloat(" Z Multiplier ", Config.data.zMult, 0.01, -70, 15)
             if backoffMultUsed then
                 RefreshCameraIfNeeded()
             end
 
             -- Backoff controll
-            Config.data.fov, fovChanged = ImGui.DragFloat(" FOV ", Config.data.fov, 1, 40, 95)
+            Config.data.fov, fovChanged = ImGui.DragFloat(" FOV ", Config.data.fov, 1, 30, 95)
             if fovChanged then
                 RefreshCameraIfNeeded()
             end
