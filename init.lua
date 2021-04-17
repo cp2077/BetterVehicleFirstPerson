@@ -1,6 +1,7 @@
 local BetterVehicleFirstPerson = { version = "1.2.6" }
 local Config = require("Modules/Config")
 local Cron = require("Modules/Cron")
+local GameSettings = require("Modules/GameSettings")
 
 --[[
 TODO:
@@ -14,6 +15,7 @@ local enabled = true
 
 local isInVehicle = false
 local curVehicle = nil
+local isYFlipped = false
 
 function IsEnteringVehicle()
     return IsInVehicle() and Game.GetWorkspotSystem():GetExtendedInfo(Game.GetPlayer()).entering
@@ -57,6 +59,19 @@ function ResetCamera()
     Game.GetPlayer():GetFPPCameraComponent():SetLocalPosition(Vector4.new(0.0, 0, 0, 1.0))
 end
 
+function FlipY()
+	GameSettings.Toggle('/controls/fppcameramouse/FPP_MouseInvertY')
+	GameSettings.Toggle('/controls/fppcamerapad/FPP_PadInvertY')
+    isYFlipped = not isYFlipped
+end
+function DoubleCheckY()
+	if isYFlipped then
+		GameSettings.Toggle('/controls/fppcameramouse/FPP_MouseInvertY')
+		GameSettings.Toggle('/controls/fppcamerapad/FPP_PadInvertY')
+		isYFlipped = false
+    end
+end
+
 function StartPeek()
     local player = Game.GetPlayer()
     local vehicle = Game['GetMountedVehicle;GameObject'](player)
@@ -66,8 +81,11 @@ function StartPeek()
 
     Game.GetPlayer():GetFPPCameraComponent():SetLocalOrientation(Quaternion.new(0.0, 0.0, 100, 1.0))
     Game.GetPlayer():GetFPPCameraComponent():SetLocalPosition(Vector4.new(-0.6, 0.0, 0.01, 1.0))
+    FlipY()
 end
 function StopPeek()
+    FlipY()
+    DoubleCheckY()
     if enabled then
         TiltCamera()
         RaiseCamera()
@@ -79,6 +97,7 @@ end
 
 function SaveConfig()
     Config.SaveConfig()
+    DoubleCheckY()
 end
 
 function HasMountedVehicle()
