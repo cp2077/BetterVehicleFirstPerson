@@ -438,12 +438,14 @@ function BetterVehicleFirstPerson:New()
             ImGui.Separator()
             ImGui.Text("")
 
-            ImGui.Text("Auto applied per-vehicle presets")
+            ImGui.Text("Per-vehicle presets")
 
             -- Presets manager
             if curVehicle then
                 local carName = GetVehicleMan(curVehicle) .. " " .. GetVehicleModel(curVehicle)
-                if ImGui.Button(" Save for " .. carName .. " ") then
+
+                -- Save preset for a vehicle
+                if ImGui.Button((" Save %q preset "):format(carName)) then
                     AddVehiclePreset()
                 end
                 ImGui.Text(" ")
@@ -458,7 +460,7 @@ function BetterVehicleFirstPerson:New()
                         ImGui.PushStyleColor(ImGuiCol.ButtonHovered, 0.5, 0.5, 0.5, 0.4)
                         ImGui.PushStyleColor(ImGuiCol.ButtonActive, 0.5, 0.5, 0.5, 0.4)
                     end
-                    if ImGui.Button(" Select ") and not isSamePreset then
+                    if ImGui.Button(" Load ") and not isSamePreset then
                         ApplyPreset(pr.preset)
                         RefreshCameraIfNeeded()
                     end
