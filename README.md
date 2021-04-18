@@ -15,6 +15,12 @@
 
 ## Changelog:
 
+### 1.2.7 - 19/04/2021
+- Fix: Camera now resets when you exit vehicle super quickly (eg. falling off a bike)
+- Fix: Vertical axis is no longer inverted while peeking
+- ...and some other improvements.
+
+
 ### 1.2.6 - 15/04/2021
 - Fix: Center camera when peeking through window
 
