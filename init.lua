@@ -341,7 +341,7 @@ function BetterVehicleFirstPerson:New()
             StopPeek()
         end
     end)
-    registerHotkey("VehicleFPPCameraEnabled", "Toggle Enhanced Vehicle Camera Enabled", function()
+    registerHotkey("VehicleFPPCameraEnabled", "Toggle Enabled", function()
         if isInVehicle then
             enabled = not enabled
             RefreshCameraIfNeeded()
@@ -365,7 +365,6 @@ function BetterVehicleFirstPerson:New()
 
         ImGui.Begin("VehicleFPPCamera", ImGuiWindowFlags.AlwaysAutoResize)
         ImGui.SetWindowFontScale(1)
-
 
         -- toggle enabled
         enabled, toggleEnabled = ImGui.Checkbox("Enabled", enabled)
