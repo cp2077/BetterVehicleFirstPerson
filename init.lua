@@ -76,7 +76,9 @@ function StartPeek()
     local player = Game.GetPlayer()
     local vehicle = Game['GetMountedVehicle;GameObject'](player)
     if vehicle then
-        player:QueueEvent(NewObject('handle:vehicleCameraResetEvent'))
+        if not Game.GetPlayer():FindVehicleCameraManager():IsTPPActive() then
+			player:QueueEvent(NewObject('handle:vehicleCameraResetEvent'))
+		end
     end
 
     Game.GetPlayer():GetFPPCameraComponent():SetLocalOrientation(Quaternion.new(0.0, 0.0, 100, 1.0))
@@ -84,6 +86,14 @@ function StartPeek()
     FlipY()
 end
 function StopPeek()
+    local player = Game.GetPlayer()
+    local vehicle = Game['GetMountedVehicle;GameObject'](player)
+    if vehicle then
+        if not Game.GetPlayer():FindVehicleCameraManager():IsTPPActive() then
+            player:QueueEvent(NewObject('handle:vehicleCameraResetEvent'))
+        end
+    end
+
     FlipY()
     DoubleCheckY()
     if enabled then
@@ -365,7 +375,6 @@ function BetterVehicleFirstPerson:New()
 
         ImGui.Begin("VehicleFPPCamera", ImGuiWindowFlags.AlwaysAutoResize)
         ImGui.SetWindowFontScale(1)
-
         -- toggle enabled
         enabled, toggleEnabled = ImGui.Checkbox("Enabled", enabled)
         if toggleEnabled then
