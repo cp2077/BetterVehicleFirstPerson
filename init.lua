@@ -287,13 +287,13 @@ function BetterVehicleFirstPerson:New()
             isInVehicle = isInVehicleNext
         end)
 
-        -- Observe('hudCarController', 'RegisterToVehicle', function(self, registered)
-        --     if registered then
-        --         OnVehicleEnter()
-        --     else
-        --         OnVehicleExit()
-        --     end
-        -- end)
+        Observe('hudCarController', 'RegisterToVehicle', function(self, registered)
+            if registered then
+                --
+            else
+                OnVehicleExited()
+            end
+        end)
         -- Observe('hudCarController', 'OnCameraModeChanged', function(mode, self)
         --     if mode then
         --         OnVehicleExit()
@@ -310,9 +310,9 @@ function BetterVehicleFirstPerson:New()
         end)
 
         -- Fires when execting
-        -- Observe('hudCarController', 'OnUnmountingEvent', function()
-        --     OnVehicleExit()
-        -- end)
+        Observe('hudCarController', 'OnUnmountingEvent', function()
+            OnVehicleExited()
+        end)
         -- Observe('RadialWheelController', 'RegisterBlackboards', function(_, loaded)
         --     if not loaded then
         --         isInVehicle = false
@@ -432,7 +432,6 @@ function BetterVehicleFirstPerson:New()
                 ApplyPreset(presets[5])
                 RefreshCameraIfNeeded()
             end
-
 
             ImGui.Text("")
 
