@@ -1,4 +1,4 @@
-local BetterVehicleFirstPerson = { version = "1.2.7" }
+local BetterVehicleFirstPerson = { version = "1.3.0" }
 local Config = require("Modules/Config")
 local Cron = require("Modules/Cron")
 local GameSettings = require("Modules/GameSettings")
