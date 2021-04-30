@@ -4,6 +4,7 @@ local Config = {
         ["yMult"] = 1.0,
         ["zMult"] = 0.5,
         ["fov"] = 60,
+        ["sensitivity"] = 50,
         ["perCarPresets"] = {},
         ["autoSetPerCar"] = true
     },
@@ -34,12 +35,22 @@ function Migrate()
     if Config.data.fov == nil then
         Config.data.fov = 60
     end
+    if Config.data.sensitivity == nil then
+        Config.data.sensitivity = 50
+    end
     if Config.data.autoSetPerCar == nil then
         Config.data.autoSetPerCar = true
     end
     if Config.data.perCarPresets == nil then
         Config.data.perCarPresets = {}
     end
+
+    for _, pr in pairs(Config.data.perCarPresets) do
+        if pr.preset[5] == nil then
+            pr.preset[5] = 50
+        end
+    end
+
     WriteConfig()
 end
 

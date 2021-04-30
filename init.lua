@@ -10,6 +10,7 @@ TODO:
 ]]
 
 local initialFOV = 51
+local initialSensitivity = 50
 
 local enabled = true
 
@@ -44,6 +45,18 @@ end
 function ResetFOV()
     Game.GetPlayer():GetFPPCameraComponent():SetFOV(initialFOV)
 end
+
+function ChangeSensitivity(sensitivity)
+	if sensitivity ~= nil then
+		Config.data.sensitivity = sensitivity
+	end
+
+	GameSettings.Set('/controls/SteeringSensitivity', Config.data.sensitivity)
+end
+function ResetSensitivity()
+	return ChangeSensitivity(initialSensitivity)
+end
+
 
 function TiltCamera()
     Game.GetPlayer():GetFPPCameraComponent():SetLocalOrientation(Quaternion.new((-0.06 * Config.data.tiltMult), 0.0, 0.0, 1.0))
@@ -134,7 +147,7 @@ function IsPlayerDriver()
 end
 
 function GetCurrentPreset()
-    return { Config.data.tiltMult, Config.data.yMult, Config.data.zMult, Config.data.fov }
+    return { Config.data.tiltMult, Config.data.yMult, Config.data.zMult, Config.data.fov, Config.data.sensitivity}
 end
 
 function GetVehicleMan(vehicle)
@@ -142,6 +155,19 @@ function GetVehicleMan(vehicle)
 end
 function GetVehicleModel(vehicle)
     return vehicle:Model():Type().value
+end
+
+function SetGlobalPreset()
+    local gKey = ("global_preset")
+    local gPreset = {
+        ["man"] = "global",
+        ["model"] = "n/a",
+        ["preset"] = GetCurrentPreset()
+    }
+
+    Config.data.perCarPresets[gKey] = gPreset
+
+    SaveConfig()
 end
 
 function AddVehiclePreset()
@@ -161,6 +187,17 @@ function AddVehiclePreset()
     SaveConfig()
 end
 
+function GetGlobalPreset()
+    local gKey = "global_preset"
+    local gPreset = Config.data.perCarPresets[gKey]
+
+    if gPreset then
+        return gPreset.preset
+    end
+
+    return nil
+end
+
 function GetVehiclePreset(vehicle)
     if not vehicle then
         return nil
@@ -171,6 +208,13 @@ function GetVehiclePreset(vehicle)
     local vehKey = (vehMan .. vehModel)
     local vehPreset = Config.data.perCarPresets[vehKey]
     if vehPreset then
+        --catch error?
+        --if vehPreset.preset[5] == nil then
+        --	vehPreset.preset[5] = initialSensitivity
+        --end
+        --
+        --^ is obsolete, I added iteration through all car presets
+        --in Config.lua - Migrate() function
         return vehPreset.preset
     end
 
@@ -183,14 +227,27 @@ function ApplyAutoPreset()
 
     if Config.data.autoSetPerCar then
         local preset = GetVehiclePreset(vehicle)
+        local gPreset = GetGlobalPreset()
+
         if preset then
             ApplyPreset(preset)
+            RefreshCameraIfNeeded()
+        elseif gPreset then
+            ApplyPreset(gPreset)
+            RefreshCameraIfNeeded()
+        end
+    else
+        local gPreset = GetGlobalPreset()
+        if gPreset then
+            ApplyPreset(gPreset)
             RefreshCameraIfNeeded()
         end
     end
 end
 
 function OnVehicleEntered()
+    initialSensitivity = GameSettings.Get('/controls/SteeringSensitivity')
+
     ApplyAutoPreset()
 
     -- TODO: is this ever changing for different players?
@@ -203,6 +260,8 @@ function OnVehicleEntered()
     RaiseCamera()
 
     SetFOV()
+
+    ChangeSensitivity()
 end
 
 function OnVehicleEntering()
@@ -220,6 +279,7 @@ function OnVehicleExiting()
     ResetCamera()
     ResetTilt()
     ResetFOV()
+    ResetSensitivity()
     curVehicle = nil
 end
 
@@ -227,6 +287,7 @@ function OnVehicleExited()
     if enabled then
         ResetCamera()
         ResetTilt()
+        ResetSensitivity()
     end
 end
 
@@ -236,20 +297,22 @@ function RefreshCameraIfNeeded()
         TiltCamera()
         RaiseCamera()
         SetFOV()
+        ChangeSensitivity()
     elseif isInVehicle and not enabled then
         ResetCamera()
         ResetTilt()
         ResetFOV()
+        ResetSensitivity()
     end
 end
 
 local presets = {
     -- default
-    { 1.150, 0.9, -0.2, 56 },
-    { 1.050, 0.8, -3.810, 58 },
-    { 1.170, 0.810, 7, 49 },
-    { 0.950, 0.610, -10, 70 },
-    { 0.950, 0.500, -13, 87 },
+    { 1.150, 0.9, -0.2, 56, 50 },
+    { 1.050, 0.8, -3.810, 58, 50 },
+    { 1.170, 0.810, 7, 49, 50 },
+    { 0.950, 0.610, -10, 70, 50 },
+    { 0.950, 0.500, -13, 87, 50 },
     -- car-specific
     -- ...
 }
@@ -258,7 +321,8 @@ function IsSamePreset(pr)
     return math.abs(Config.data.tiltMult - pr[1]) < 0.01 and
             math.abs(Config.data.yMult - pr[2]) < 0.01 and
             math.abs(Config.data.zMult - pr[3]) < 0.01 and
-            math.abs(Config.data.fov - pr[4]) < 0.01
+            math.abs(Config.data.fov - pr[4]) < 0.01 and
+            math.abs(Config.data.sensitivity - pr[5]) < 0.01
 end
 
 function DeletePreset(key)
@@ -270,11 +334,13 @@ function ApplyPreset(pr)
     Config.data.yMult = pr[2]
     Config.data.zMult = pr[3]
     Config.data.fov = pr[4]
+    Config.data.sensitivity = pr[5]
 end
 
 
 function BetterVehicleFirstPerson:New()
     registerForEvent("onInit", function()
+        initialSensitivity = GameSettings.Get('/controls/SteeringSensitivity')
         Config.InitConfig()
 
         Cron.Every(0.2, { tick = 1 }, function()
@@ -297,20 +363,11 @@ function BetterVehicleFirstPerson:New()
             isInVehicle = isInVehicleNext
         end)
 
-        Observe('hudCarController', 'RegisterToVehicle', function(self, registered)
-            if registered then
-                --
-            else
+        Observe('hudCarController', 'RegisterToVehicle', function(_, registered)
+            if not registered then
                 OnVehicleExited()
             end
         end)
-        -- Observe('hudCarController', 'OnCameraModeChanged', function(mode, self)
-        --     if mode then
-        --         OnVehicleExit()
-        --     else
-        --         OnVehicleEnter()
-        --     end
-        -- end)
 
         -- Fires with loaded save file too
         Observe('hudCarController', 'OnPlayerAttach', function()
@@ -323,12 +380,6 @@ function BetterVehicleFirstPerson:New()
         Observe('hudCarController', 'OnUnmountingEvent', function()
             OnVehicleExited()
         end)
-        -- Observe('RadialWheelController', 'RegisterBlackboards', function(_, loaded)
-        --     if not loaded then
-        --         isInVehicle = false
-        --         OnVehicleExit()
-        --     end
-        -- end)
 
     end)
 
@@ -375,6 +426,7 @@ function BetterVehicleFirstPerson:New()
 
         ImGui.Begin("VehicleFPPCamera", ImGuiWindowFlags.AlwaysAutoResize)
         ImGui.SetWindowFontScale(1)
+
         -- toggle enabled
         enabled, toggleEnabled = ImGui.Checkbox("Enabled", enabled)
         if toggleEnabled then
@@ -382,39 +434,59 @@ function BetterVehicleFirstPerson:New()
         end
 
         if enabled and isInVehicle then
+			local globalVehiclePreset = GetGlobalPreset()
             local curVehiclePreset = GetVehiclePreset(GetMountedVehicleRecord())
             if not curVehiclePreset or not IsSamePreset(curVehiclePreset) then
-                ImGui.PushStyleColor(ImGuiCol.Text, 0.60, 0.40, 0.20, 1.0)
-                ImGui.Text("PRESET IS NOT SAVED")
+                --ImGui.PushStyleColor(ImGuiCol.Text, 0.60, 0.40, 0.20, 1.0)
+                ImGui.PushStyleColor(ImGuiCol.Text, 1.0, 0.53, 0.14, 1.0)
+
+				if not globalVehiclePreset then
+					ImGui.Text(" THESE VALUES HAVEN'T YET BEEN SAVED ")
+				else
+					if not IsSamePreset(globalVehiclePreset) then
+						ImGui.Text(" THESE VALUES HAVEN'T YET BEEN SAVED ")
+					else
+						ImGui.Text("")
+					end
+				end
+
                 ImGui.PopStyleColor(1)
             else
                 ImGui.Text("")
             end
 
-            -- Tilt controll
-            Config.data.tiltMult, tiltMultUsed = ImGui.DragFloat(" Tilt Multiplier ", Config.data.tiltMult, 0.01, -1, 5)
-            if tiltMultUsed then
+            -- Tilt control
+            -- luacheck:ignore lowercase-global
+            Config.data.tiltMult, isTiltChanged = ImGui.DragFloat(" Tilt Multiplier ", Config.data.tiltMult, 0.01, -1, 5)
+            if isTiltChanged then
                 RefreshCameraIfNeeded()
             end
 
-            -- Raise controll
-            Config.data.yMult, raiseMultUsed = ImGui.DragFloat(" Y Multiplier ", Config.data.yMult, 0.01, -2, 3)
-            if raiseMultUsed then
+            -- Y control
+            Config.data.yMult, isYChanged = ImGui.DragFloat(" Y Multiplier ", Config.data.yMult, 0.01, -2, 3)
+            if isYChanged then
                 RefreshCameraIfNeeded()
             end
 
-            -- Backoff controll
-            Config.data.zMult, backoffMultUsed = ImGui.DragFloat(" Z Multiplier ", Config.data.zMult, 0.01, -70, 15)
-            if backoffMultUsed then
+            -- Z control
+            Config.data.zMult, isZChanged = ImGui.DragFloat(" Z Multiplier ", Config.data.zMult, 0.01, -70, 15)
+            if isZChanged then
                 RefreshCameraIfNeeded()
             end
 
-            -- Backoff controll
-            Config.data.fov, fovChanged = ImGui.DragFloat(" FOV ", Config.data.fov, 1, 30, 95)
-            if fovChanged then
+            -- FOV control
+            Config.data.fov, isFovChanged = ImGui.DragFloat(" FOV ", Config.data.fov, 1, 30, 95)
+            if isFovChanged then
                 RefreshCameraIfNeeded()
             end
-            -- Presets
+
+			-- Sensitivity control
+			Config.data.sensitivity, isSensitivityChanged = ImGui.DragFloat(" Steering sensitivity ", Config.data.sensitivity, 1, 0, 100)
+			if isSensitivityChanged then
+                RefreshCameraIfNeeded()
+			end
+
+            -- Predefined presets
             ImGui.Text("Built-in presets: ")
             if ImGui.SmallButton(" 1 ") then
                 ApplyPreset(presets[1])
@@ -440,69 +512,151 @@ function BetterVehicleFirstPerson:New()
                 ApplyPreset(presets[5])
                 RefreshCameraIfNeeded()
             end
-
             ImGui.Text("")
-
             ImGui.Separator()
-            ImGui.Text("")
 
-            ImGui.Text("Per-vehicle presets")
+            -- Save global preset
+            if not globalVehiclePreset then
+                ImGui.Text("")
+                ImGui.Text(" The global preset ")
+                ImGui.Text(" hasn't been established yet. ")
+                ImGui.Text("")
+                if ImGui.Button((" Save as new global preset ")) then
+                    SetGlobalPreset()
+                end
+
+                ImGui.Text("")
+                ImGui.Separator()
+            else
+                if not IsSamePreset(globalVehiclePreset) then
+                    local function CurSetupIsDiffMsg()
+                        ImGui.Text("")
+                        ImGui.Text(" Current setup is different from the global preset. ")
+                    end
+                    if curVehiclePreset then
+                        if IsSamePreset(curVehiclePreset) then
+                            ImGui.Text("")
+                            ImGui.Text(" Vehicle preset overrides the global preset. ")
+                        else
+                            CurSetupIsDiffMsg()
+                        end
+                    else
+                        CurSetupIsDiffMsg()
+                    end
+
+                    -- Save global preset
+                    if ImGui.Button((" Save global preset ")) then
+                        SetGlobalPreset()
+                    end
+
+                    -- Reset global preset
+                    if ImGui.Button((" Load global preset ")) then
+                        ApplyPreset(globalVehiclePreset)
+                        RefreshCameraIfNeeded()
+                    end
+                else
+                    local function globPresetHasBeenLoadedMsg()
+                        ImGui.Text("")
+                        ImGui.Text(" The global preset has been loaded! ")
+                    end
+                    if curVehiclePreset then
+                        if IsSamePreset(curVehiclePreset) then
+                            ImGui.Text("")
+                            ImGui.Text(" The global and vehicle presets are the same")
+                        else
+                            globPresetHasBeenLoadedMsg()
+                        end
+                    else
+                        globPresetHasBeenLoadedMsg()
+                    end
+
+                end
+
+                ImGui.Text("")
+                ImGui.Separator()
+            end
+            ImGui.Text("")
 
             -- Presets manager
             if curVehicle then
                 local carName = GetVehicleMan(curVehicle) .. " " .. GetVehicleModel(curVehicle)
 
+                -- "You're driving %CarName%" message
+                ImGui.Text(" You're driving ")
+                ImGui.SameLine()
+                ImGui.PushStyleColor(ImGuiCol.Text, 1.0, 0.86, 0.47, 1.0)
+                ImGui.Text(("%q "):format(carName))
+                ImGui.PopStyleColor(1)
+
                 -- Save preset for a vehicle
-                if ImGui.Button((" Save %q preset "):format(carName)) then
-                    AddVehiclePreset()
+                if curVehiclePreset then
+                    if not IsSamePreset(curVehiclePreset) then
+                        if ImGui.Button((" Save %q preset "):format(carName)) then
+                            AddVehiclePreset()
+                        end
+                    else
+                        ImGui.Text(" The vehicle preset has been loaded ")
+                    end
+                else
+                    if ImGui.Button((" Save as new %q preset "):format(carName)) then
+                        AddVehiclePreset()
+                    end
                 end
 
                 -- Reset preset
                 if curVehiclePreset and not IsSamePreset(curVehiclePreset) then
-                    ImGui.SameLine()
-                    if ImGui.Button((" Reset "):format(carName)) then
+                    if ImGui.Button((" Load %s preset "):format(carName)) then
                         ApplyPreset(curVehiclePreset)
                         RefreshCameraIfNeeded()
                     end
                 end
-                ImGui.Text(" ")
+                ImGui.Text("")
+                ImGui.Separator()
+                ImGui.Text("")
 
                 ImGui.BeginChild("percarpresets", 500, 300)
-
+                -- Preset list
                 for i, pr in pairs(Config.data.perCarPresets) do
-                    local isSamePreset = IsSamePreset(pr.preset)
-                    ImGui.PushID(tostring(i))
-                    if isSamePreset then
-                        ImGui.PushStyleColor(ImGuiCol.Button, 0.5, 0.5, 0.5, 0.4)
-                        ImGui.PushStyleColor(ImGuiCol.ButtonHovered, 0.5, 0.5, 0.5, 0.4)
-                        ImGui.PushStyleColor(ImGuiCol.ButtonActive, 0.5, 0.5, 0.5, 0.4)
-                    end
-                    if ImGui.Button(" Load ") and not isSamePreset then
-                        ApplyPreset(pr.preset)
-                        RefreshCameraIfNeeded()
-                    end
-                    if isSamePreset then
-                        ImGui.PopStyleColor(3)
-                    end
-                    ImGui.PopID()
-                    ImGui.SameLine()
+                    if pr.man ~= "global" then
+                        local isSamePreset = IsSamePreset(pr.preset)
 
-                    ImGui.PushID("del" .. tostring(i))
-                    ImGui.PushStyleColor(ImGuiCol.Button, 0.60, 0.20, 0.30, 0.8)
-                    ImGui.PushStyleColor(ImGuiCol.ButtonHovered, 0.70, 0.20, 0.30, 1.0)
-                    ImGui.PushStyleColor(ImGuiCol.ButtonActive, 0.70, 0.20, 0.30, 0.5)
-                    if ImGui.Button(" Delete ") then
-                        DeletePreset((pr.man .. pr.model))
-                    end
-                    ImGui.PopStyleColor(3)
-                    ImGui.PopID()
-                    ImGui.SameLine()
-                    if isSamePreset then
-                        ImGui.PushStyleColor(ImGuiCol.Text, 0.1, 0.7, 0.2, 1)
-                    end
-                    ImGui.Text(pr.man .. " " .. pr.model)
-                    if isSamePreset then
-                        ImGui.PopStyleColor()
+                        -- Load Preset Button
+                        ImGui.PushID(tostring(i))
+                        if isSamePreset then
+                            ImGui.PushStyleColor(ImGuiCol.Button, 0.5, 0.5, 0.5, 0.4)
+                            ImGui.PushStyleColor(ImGuiCol.ButtonHovered, 0.5, 0.5, 0.5, 0.4)
+                            ImGui.PushStyleColor(ImGuiCol.ButtonActive, 0.5, 0.5, 0.5, 0.4)
+                        end
+                        if ImGui.Button(" Load ") and not isSamePreset then
+                            ApplyPreset(pr.preset)
+                            RefreshCameraIfNeeded()
+                        end
+                        if isSamePreset then
+                            ImGui.PopStyleColor(3)
+                        end
+                        ImGui.PopID()
+                        ImGui.SameLine()
+
+                        -- Delete Preset Button
+                        ImGui.PushID("del" .. tostring(i))
+                        ImGui.PushStyleColor(ImGuiCol.Button, 0.60, 0.20, 0.30, 0.8)
+                        ImGui.PushStyleColor(ImGuiCol.ButtonHovered, 0.70, 0.20, 0.30, 1.0)
+                        ImGui.PushStyleColor(ImGuiCol.ButtonActive, 0.70, 0.20, 0.30, 0.5)
+                        if ImGui.Button(" Delete ") then
+                            DeletePreset((pr.man .. pr.model))
+                        end
+                        ImGui.PopStyleColor(3)
+                        ImGui.PopID()
+                        ImGui.SameLine()
+
+                        -- Preset Name
+                        if isSamePreset then
+                            ImGui.PushStyleColor(ImGuiCol.Text, 0.1, 0.7, 0.2, 1)
+                        end
+                        ImGui.Text(pr.man .. " " .. pr.model)
+                        if isSamePreset then
+                            ImGui.PopStyleColor()
+                        end
                     end
                 end
                 ImGui.EndChild()
