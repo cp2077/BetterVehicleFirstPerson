@@ -13,13 +13,6 @@
 1. Make sure you've installed Cyber Engine Tweaks.
 2. Drop the content of an archive into your cyberpunk directory (where the "bin" folder is).
 
-## Changelog:
-
-### 1.2.7 - 19/04/2021
-- Fix: Camera now resets when you exit vehicle super quickly (eg. falling off a bike)
-- Fix: Vertical axis is no longer inverted while peeking
-- ...and some other improvements.
-
 ----
 
 This project contains files that are parts of MIT licensed project [cp2077-cet-kit](https://github.com/psiberx/cp2077-cet-kit).  
