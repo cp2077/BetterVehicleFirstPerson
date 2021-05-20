@@ -20,35 +20,6 @@
 - Fix: Vertical axis is no longer inverted while peeking
 - ...and some other improvements.
 
-
-### 1.2.6 - 15/04/2021
-- Fix: Center camera when peeking through window
-
-### 1.2.5 - 12/04/2021
-- Bug fixes
-
-### 1.2.4 - 09/04/2021
-- Fix: Peek Through Window is now only works when you are driving the vehicle.
-
-### 1.2.3 - 08/04/2021
-- Fix: Camera is no longer applied when player is a passenger
-
-### 1.2.2 - 08/04/2021
-- Fix: Camera is now correctly applied when loading a save file inside of a car
-
-### 1.2.1 - 08/04/2021
-- Fix: Camera is no longer applied when player is in cutscene
-
-### 1.2.0 - 07/04/2021
-- Feature: Peek Through Window
-
-### 1.1.0 - 07/04/2021
-- Feature: Save per-vehicle presets
-- Feature: Change FOV
-
-### 1.0.0 - 06/04/2021
-- Release
-
 ----
 
 This project contains files that are parts of MIT licensed project [cp2077-cet-kit](https://github.com/psiberx/cp2077-cet-kit).  
