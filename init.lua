@@ -1,22 +1,35 @@
-local BetterVehicleFirstPerson = { version = "1.3.0" }
+local BetterVehicleFirstPerson = { version = "1.4.0" }
 local Config = require("Modules/Config")
+local GameSession = require("Modules/GameSession")
 local Cron = require("Modules/Cron")
 local GameSettings = require("Modules/GameSettings")
-
---[[
-TODO:
-1. Camera should work for passenger seat, but have to be turned off for the combat mode.
-   VehicleTransition SetVehFppCameraParams/ToDriverCombat
-]]
 
 local initialFOV = 51
 local initialSensitivity = 50
 
 local enabled = true
+local disabledByApi = false
+local isInGame = false
 
 local isInVehicle = false
 local curVehicle = nil
 local isYFlipped = false
+
+local API = {}
+
+function API.Enable()
+  enabled = true
+  RefreshCameraIfNeeded()
+end
+
+function API.Disable()
+  enabled = false
+  RefreshCameraIfNeeded()
+end
+
+function API.IsEnabled()
+  return enabled
+end
 
 function IsEnteringVehicle()
     return IsInVehicle() and Game.GetWorkspotSystem():GetExtendedInfo(Game.GetPlayer()).entering
@@ -26,8 +39,9 @@ function IsExitingVehicle()
 end
 
 function IsInVehicle()
-    return Game.GetWorkspotSystem():IsActorInWorkspot(Game.GetPlayer())
-            and Game.GetWorkspotSystem():GetExtendedInfo(Game.GetPlayer()).isActive
+    local player = Game.GetPlayer()
+    return player and Game.GetWorkspotSystem():IsActorInWorkspot(player)
+            and Game.GetWorkspotSystem():GetExtendedInfo(player).isActive
             and HasMountedVehicle()
             and IsPlayerDriver()
 end
@@ -343,9 +357,17 @@ function BetterVehicleFirstPerson:New()
         initialSensitivity = GameSettings.Get('/controls/SteeringSensitivity')
         Config.InitConfig()
 
-        Cron.Every(0.2, { tick = 1 }, function()
-            if not Config or not Config.isReady or not Game.GetPlayer() then
+        Cron.Every(0.2, function()
+            if not enabled then
+              return
+            end
+
+            if not Config or not Config.isReady then
                 return
+            end
+
+            if not isInGame then
+              return
             end
 
             local isInVehicleNext = IsInVehicle() and not IsEnteringVehicle() and not IsExitingVehicle()
@@ -381,6 +403,21 @@ function BetterVehicleFirstPerson:New()
             OnVehicleExited()
         end)
 
+        GameSession.OnStart(function()
+          isInGame = true
+        end)
+
+        GameSession.OnEnd(function()
+          isInGame = false
+        end)
+
+        GameSession.OnPause(function()
+          isInGame = false
+        end)
+
+        GameSession.OnResume(function()
+          isInGame = true
+        end)
     end)
 
     registerForEvent("onOverlayOpen", function() isOverlayOpen = true end)
@@ -668,7 +705,10 @@ function BetterVehicleFirstPerson:New()
         ImGui.PopStyleColor(8)
     end)
 
-    return { ["version"] = BetterVehicleFirstPerson.version }
+    return {
+      version = BetterVehicleFirstPerson.version,
+      api = API
+    }
 end
 
 return BetterVehicleFirstPerson:New()
