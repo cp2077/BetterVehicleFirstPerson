@@ -5,12 +5,12 @@ Game Settings Manager
 Copyright (c) 2021 psiberx
 ]]
 
-local GameSettings = { version = '1.0.2' }
+local GameSettings = { version = '1.0.4' }
 
 local module = {}
 
 function module.parsePath(setting)
-	return setting:match('^(/.+)/([A-Za-z_]+)$')
+	return setting:match('^(/.+)/([A-Za-z0-9_]+)$')
 end
 
 function module.makePath(groupPath, varName)
@@ -168,7 +168,6 @@ end
 
 function GameSettings.Set(setting, value)
 	local path, name = module.parsePath(setting)
-
 	local var = Game.GetSettingsSystem():GetVar(path, name)
 
 	if not var then
@@ -277,6 +276,10 @@ end
 
 function GameSettings.Reject()
 	Game.GetSettingsSystem():RejectChanges()
+end
+
+function GameSettings.Save()
+	GetSingleton('inkMenuScenario'):GetSystemRequestsHandler():RequestSaveUserSettings()
 end
 
 function GameSettings.Export(isPreGame)

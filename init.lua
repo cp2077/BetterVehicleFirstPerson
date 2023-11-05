@@ -1,4 +1,4 @@
-local BetterVehicleFirstPerson = { version = "1.4.0" }
+local BetterVehicleFirstPerson = { version = "1.4.1" }
 local Config = require("Modules/Config")
 local GameSession = require("Modules/GameSession")
 local Cron = require("Modules/Cron")
@@ -38,12 +38,22 @@ function IsExitingVehicle()
     return IsInVehicle() and Game.GetWorkspotSystem():GetExtendedInfo(Game.GetPlayer()).exiting
 end
 
+function HasWeapon()
+    local player = Game.GetPlayer()
+    if player then
+      local ts = Game.GetTransactionSystem()
+      return ts and ts:GetItemInSlot(player, TweakDBID.new("AttachmentSlots.WeaponRight")) ~= nil
+    end
+    return false
+  end
+
 function IsInVehicle()
     local player = Game.GetPlayer()
     return player and Game.GetWorkspotSystem():IsActorInWorkspot(player)
             and Game.GetWorkspotSystem():GetExtendedInfo(player).isActive
             and HasMountedVehicle()
             and IsPlayerDriver()
+            and not HasWeapon()
 end
 
 function SetFOV(fov)
