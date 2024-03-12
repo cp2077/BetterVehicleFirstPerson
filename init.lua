@@ -175,8 +175,13 @@ function GetCurrentPreset()
 end
 
 function GetVehicleMan(vehicle)
-    return vehicle:Manufacturer():Type().value
+    if vehicle:Manufacturer():Type().value == "Invalid" then
+        return vehicle:GetID().value
+    else
+        return vehicle:Manufacturer():Type().value
+    end
 end
+
 function GetVehicleModel(vehicle)
     return vehicle:Model():Type().value
 end
