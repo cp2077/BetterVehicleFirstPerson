@@ -1,4 +1,4 @@
-local BetterVehicleFirstPerson = { version = "1.4.1" }
+local BetterVehicleFirstPerson = { version = "1.5.0" }
 local Config = require("Modules/Config")
 local GameSession = require("Modules/GameSession")
 local Cron = require("Modules/Cron")
@@ -8,10 +8,13 @@ local initialFOV = 51
 local initialSensitivity = 50
 
 local enabled = true
+local maintainFOVEnabled = true
 local disabledByApi = false
 local isInGame = false
 
 local isInVehicle = false
+local isWeaponDrawn = false
+local wasWeaponDrawn = false
 local curVehicle = nil
 local isYFlipped = false
 
@@ -45,7 +48,7 @@ function HasWeapon()
       return ts and ts:GetItemInSlot(player, TweakDBID.new("AttachmentSlots.WeaponRight")) ~= nil
     end
     return false
-  end
+end
 
 function IsInVehicle()
     local player = Game.GetPlayer()
@@ -53,7 +56,6 @@ function IsInVehicle()
             and Game.GetWorkspotSystem():GetExtendedInfo(player).isActive
             and HasMountedVehicle()
             and IsPlayerDriver()
-            and not HasWeapon()
 end
 
 function SetFOV(fov)
@@ -335,6 +337,14 @@ function RefreshCameraIfNeeded()
     end
 end
 
+function RefreshWeaponFOVIfNeeded()
+    if isInVehicle and HasWeapon() and maintainFOVEnabled then
+        SetFOV()
+    elseif isInVehicle and HasWeapon() and not maintainFOVEnabled then
+        ResetFOV()
+    end
+end
+
 local presets = {
     -- default
     { 1.150, 0.9, -0.2, 56, 50 },
@@ -386,6 +396,7 @@ function BetterVehicleFirstPerson:New()
             end
 
             local isInVehicleNext = IsInVehicle() and not IsEnteringVehicle() and not IsExitingVehicle()
+            local isWeaponDrawnNext = HasWeapon()
 
             if IsEnteringVehicle() then
                 OnVehicleEntering()
@@ -397,7 +408,18 @@ function BetterVehicleFirstPerson:New()
                 OnVehicleExited()
             end
 
+            -- Override FOV reset when weapon is drawn in vehicle
+            if isInVehicle then
+                if isWeaponDrawnNext and not wasWeaponDrawn and maintainFOVEnabled then
+                    SetFOV() -- Weapon drawn: maintain FOV when setting is enabled
+                elseif not isWeaponDrawnNext and wasWeaponDrawn then
+                    SetFOV() -- Weapon holstered: set FOV back to vehicle preset (also applies when choosing not to maintain FOV with weapon use)
+                end
+            end
+            
             isInVehicle = isInVehicleNext
+            wasWeaponDrawn = isWeaponDrawn -- Track last weapon state explicitly
+            isWeaponDrawn = isWeaponDrawnNext
         end)
 
         Observe('hudCarController', 'RegisterToVehicle', function(_, registered)
@@ -479,10 +501,14 @@ function BetterVehicleFirstPerson:New()
         ImGui.Begin("VehicleFPPCamera", ImGuiWindowFlags.AlwaysAutoResize)
         ImGui.SetWindowFontScale(1)
 
-        -- toggle enabled
+        -- toggle enabled / maintain FOV when using weapons
         enabled, toggleEnabled = ImGui.Checkbox("Enabled", enabled)
+        maintainFOVEnabled, toggleMaintainFOVEnabled = ImGui.Checkbox("Maintain FOV when using weapons", maintainFOVEnabled)
         if toggleEnabled then
             RefreshCameraIfNeeded()
+        end
+        if toggleMaintainFOVEnabled then
+            RefreshWeaponFOVIfNeeded()
         end
 
         if enabled and isInVehicle then
