@@ -87,15 +87,17 @@ end
 function TiltCamera()
     Game.GetPlayer():GetFPPCameraComponent():SetLocalOrientation(Quaternion.new((-0.06 * Config.data.tiltMult), 0.0, 0.0, 1.0))
 end
+
 function ResetTilt()
     Game.GetPlayer():GetFPPCameraComponent():SetLocalOrientation(Quaternion.new(0.00, 0.0, 0.0, 1.0))
 end
 
 function RaiseCamera()
-    Game.GetPlayer():GetFPPCameraComponent():SetLocalPosition(Vector4.new(0.0, -(0.02 * Config.data.zMult), (0.09 * Config.data.yMult), 1.0))
+    Game.GetPlayer():GetFPPCameraComponent():SetLocalPosition(Vector4.new((0.02 * Config.data.xMult), -(0.02 * Config.data.zMult), (0.09 * Config.data.yMult), 1.0))
 end
+
 function ResetCamera()
-    Game.GetPlayer():GetFPPCameraComponent():SetLocalPosition(Vector4.new(0.0, 0, 0, 1.0))
+    Game.GetPlayer():GetFPPCameraComponent():SetLocalPosition(Vector4.new((0.02 * Config.data.xMult), 0, 0, 1.0))
 end
 
 function FlipY()
@@ -173,7 +175,7 @@ function IsPlayerDriver()
 end
 
 function GetCurrentPreset()
-    return { Config.data.tiltMult, Config.data.yMult, Config.data.zMult, Config.data.fov, Config.data.sensitivity}
+    return { Config.data.tiltMult, Config.data.yMult, Config.data.zMult, Config.data.fov, Config.data.sensitivity, Config.data.xMult }
 end
 
 function GetVehicleMan(vehicle)
@@ -361,7 +363,8 @@ function IsSamePreset(pr)
             math.abs(Config.data.yMult - pr[2]) < 0.01 and
             math.abs(Config.data.zMult - pr[3]) < 0.01 and
             math.abs(Config.data.fov - pr[4]) < 0.01 and
-            math.abs(Config.data.sensitivity - pr[5]) < 0.01
+            math.abs(Config.data.sensitivity - pr[5]) < 0.01 and
+            math.abs(Config.data.xMult - pr[6]) < 0.01
 end
 
 function DeletePreset(key)
@@ -374,6 +377,7 @@ function ApplyPreset(pr)
     Config.data.zMult = pr[3]
     Config.data.fov = pr[4]
     Config.data.sensitivity = pr[5]
+    Config.data.xMult = pr[6]
 end
 
 
@@ -416,11 +420,19 @@ function BetterVehicleFirstPerson:New()
                     SetFOV() -- Weapon holstered: set FOV back to vehicle preset (also applies when choosing not to maintain FOV with weapon use)
                 end
             end
+
+            if isInVehicle then
+                if isWeaponDrawnNext and not wasWeaponDrawn then
+                    Game.GetPlayer():GetFPPCameraComponent():SetLocalPosition(Vector4.new(0, -(0.02 * Config.data.zMult), (0.09 * Config.data.yMult), 1.0))
+                elseif not isWeaponDrawnNext and wasWeaponDrawn then
+                    Game.GetPlayer():GetFPPCameraComponent():SetLocalPosition(Vector4.new((0.02 * Config.data.xMult), -(0.02 * Config.data.zMult), (0.09 * Config.data.yMult), 1.0))
+                end
+            end
             
             isInVehicle = isInVehicleNext
             wasWeaponDrawn = isWeaponDrawn -- Track last weapon state explicitly
             isWeaponDrawn = isWeaponDrawnNext
-        end)
+        end, {})
 
         Observe('hudCarController', 'RegisterToVehicle', function(_, registered)
             if not registered then
@@ -537,6 +549,12 @@ function BetterVehicleFirstPerson:New()
             -- luacheck:ignore lowercase-global
             Config.data.tiltMult, isTiltChanged = ImGui.DragFloat(" Tilt Multiplier ", Config.data.tiltMult, 0.01, -1, 5)
             if isTiltChanged then
+                RefreshCameraIfNeeded()
+            end
+
+            -- Horizontal Offset control
+            Config.data.xMult, isXChanged = ImGui.DragFloat(" X Multiplier ", Config.data.xMult, 0.01, -2, 5)
+            if isXChanged then
                 RefreshCameraIfNeeded()
             end
 

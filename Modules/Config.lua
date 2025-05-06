@@ -1,12 +1,13 @@
 local Config = {
     ["data"] = {
         ["tiltMult"] = 1.150,
+        ["xMult"] = 0.0,
         ["yMult"] = 1.0,
         ["zMult"] = 0.5,
         ["fov"] = 60,
         ["sensitivity"] = 50,
         ["perCarPresets"] = {},
-        ["autoSetPerCar"] = true
+        ["autoSetPerCar"] = true,
     },
     ["isReady"] = false
 }
@@ -44,10 +45,16 @@ function Migrate()
     if Config.data.perCarPresets == nil then
         Config.data.perCarPresets = {}
     end
+    if Config.data.xMult == nil then
+        Config.data.xMult = 0.0
+    end
 
     for _, pr in pairs(Config.data.perCarPresets) do
         if pr.preset[5] == nil then
             pr.preset[5] = 50
+        end
+        if pr.preset[6] == nil then
+            pr.preset[6] = 0.0
         end
     end
 
