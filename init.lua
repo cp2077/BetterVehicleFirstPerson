@@ -77,7 +77,7 @@ function ChangeSensitivity(sensitivity)
 		Config.data.sensitivity = sensitivity
 	end
 
-	GameSettings.Set('/controls/SteeringSensitivity', Config.data.sensitivity)
+	GameSettings.Set('/controls/vehicle/SteeringSensitivity', Config.data.sensitivity)
 end
 function ResetSensitivity()
 	return ChangeSensitivity(initialSensitivity)
@@ -277,7 +277,7 @@ function ApplyAutoPreset()
 end
 
 function OnVehicleEntered()
-    initialSensitivity = GameSettings.Get('/controls/SteeringSensitivity')
+    initialSensitivity = GameSettings.Get('/controls/vehicle/SteeringSensitivity')
 
     ApplyAutoPreset()
 
@@ -379,7 +379,7 @@ end
 
 function BetterVehicleFirstPerson:New()
     registerForEvent("onInit", function()
-        initialSensitivity = GameSettings.Get('/controls/SteeringSensitivity')
+        initialSensitivity = GameSettings.Get('/controls/vehicle/SteeringSensitivity')
         Config.InitConfig()
 
         Cron.Every(0.2, function()
